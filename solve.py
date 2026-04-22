@@ -40,7 +40,7 @@ def main():
         # 3. Mesh Generation
         print("[2/5] Generating mesh (blockMesh, snappyHexMesh)...")
         try:
-            if not mesh(job_directory, job_id, alpha, processors_per_job):
+            if not mesh(job_directory, alpha, processors_per_job):
                 print(f"Error: Meshing failed to produce polyMesh for {job_id}. Skipping...")
                 continue
         except Exception as e:
