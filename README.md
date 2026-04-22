@@ -1,6 +1,6 @@
 # CFD Wing Automation
 
-Automates OpenFOAM simulations for a 3D wing across multiple angles of attack, including meshing, solving, and ParaView post-processing.
+Automates OpenFOAM CFD runs for an aircraft across multiple angles of attack, including meshing, solving, and ParaView post-processing.
 
 ## Requirements
 
@@ -15,7 +15,7 @@ Automates OpenFOAM simulations for a 3D wing across multiple angles of attack, i
 2. Set your parameters in `solve.py`:
 
     ```python
-    alphas = [0.0, 5.0, 10.0]  # Angles of attack (degrees)
+    alphas = [0.0, 5.0, 10.0]   # Angles of attack (degrees)
     u      = 50.0               # Freestream velocity (m/s)
     c      = 1.0                # Reference chord (m)
     S      = 1.0                # Reference area (m²)
@@ -29,7 +29,7 @@ python solve.py
 
 ## What It Does
 
-For each angle of attack, the pipeline:
+For each angle of attack, the workflow:
 
 1. Clones `case_template` into a new run directory
 2. Rotates the STL and generates the mesh with `snappyHexMesh`
