@@ -17,7 +17,7 @@ def main():
     c = 1.0          # Reference chord (lRef)
     S = 1.0          # Reference area (Aref)
     
-    alphas = [0.0, 5.0, 10.0]
+    alphas = [0.0]
 
     for alpha in alphas:
         job_id = f"run_alpha_{int(alpha)}"
@@ -99,9 +99,9 @@ def prepare(job_directory, processors_per_job, cg, u, c, S):
         
     return run_ok
 
-def mesh(job_directory, job_id, alpha, processors_per_job):
+def mesh(job_directory, alpha, processors_per_job):
     COMMANDS = [
-        f"surfaceTransformPoints \"Ry={alpha}\" {job_directory}/{job_id}.stl {job_directory}/constant/geometry/Optimized_Wing.stl",
+        f"surfaceTransformPoints \"Ry={alpha}\" {GEOMETRY_STL} {job_directory}/constant/geometry/Optimized_Wing.stl",
         f"blockMesh -case {job_directory}",
         f"surfaceFeatures -case {job_directory}",
         f"decomposePar -case {job_directory}",
@@ -116,6 +116,7 @@ def mesh(job_directory, job_id, alpha, processors_per_job):
             raise Exception(f"{command} failed")
         
     subprocess.run(f"rm -rf {job_directory}/processor*", shell=True)
+    subprocess.run(f"touch {job_directory}/para.foam", shell=True)
 
     run_ok = True
     if not os.path.isdir(f"{job_directory}/constant/polyMesh"):
@@ -143,31 +144,25 @@ def solve(job_directory, processors_per_job, num_iterations):
     return run_ok
 
 def postprocess(job_directory):
+    os.makedirs(f"{job_directory}/images", exist_ok=True)
+    command = f"export PYTHONPATH=\"/usr/lib/python3/dist-packages:$PYTHONPATH\" && LIBGL_ALWAYS_SOFTWARE=1 pvbatch post_process.py {job_directory}/para.foam {job_directory}/images"
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    
+    if result.returncode != 0:
+        print(f"ParaView failed with error:\n{result.stderr}")
+        return False
+        
+    return os.path.isdir(f"{job_directory}/images")
+
+def cleanup(job_directory):
     COMMANDS = [
-        f"export PYTHONPATH=\"/usr/lib/python3/dist-packages:$PYTHONPATH\"",
-        f"mkdir -p {job_directory}/images",
-        f"LIBGL_ALWAYS_SOFTWARE=1 pvbatch post_process.py {job_directory}/para.foam {job_directory}/images"
+        f"python3 -m PyFoam.Applications.ClearCase {job_directory} --keep-postprocessing --processors-remove",
+        f"rm -rf {job_directory}/constant/polyMesh",
+        "rm -rf PyFoam*"
     ]
 
     for command in COMMANDS:
-        runner = BasicRunner(argv=command.split(" "))
-        runner.start()
-        if not runner.runOK():
-            raise Exception(f"{command} failed")
-
-    run_ok = True
-    if not os.path.isdir(f"{job_directory}/images"):
-        run_ok = False
-    return run_ok
-
-def cleanup(job_directory):
-    COMMANDS = (
-        f"pyFoamClearCase.py {job_directory} --keep-postprocessing --processors-remove",
-        f"rm -rf {job_directory}/constant/polyMesh",
-    )
-
-    for command in COMMANDS:
-        subprocess.run(command.split(" "), capture_output=True, text=True, check=True)
+        subprocess.run(command, shell=True, capture_output=True, text=True)
 
 if __name__ == "__main__":
     main()
