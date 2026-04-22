@@ -1,0 +1,111 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  13
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solver          incompressibleFluid;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         300;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   300;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+functions
+{
+    // 1. Calculate y+ on the Wing
+    yPlus_Wing
+    {
+        type            yPlus;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    writeTime;
+        patches         ("Wing"); // Only calculates on this patch
+    }
+
+    // 2. Calculate Vorticity Field
+    vorticity_field
+    {
+        type            vorticity;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    writeTime;
+    }
+
+    // 3. Calculate Q-Criterion Field (for 3D wake)
+    Q_field
+    {
+        type            Q;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    writeTime;
+    }
+
+    // 4. Calculate Raw Forces (Newtons)
+    forces_Wing
+    {
+        type            forces;
+        libs            ("libforces.so");
+        writeControl    timeStep;   // Writes every N time steps
+        writeInterval   1;          // N = 1 (High resolution history)
+        
+        patches         ("Wing");
+        rho             rhoInf;
+        rhoInf          1.225;
+        CofR            (0.15 0 0);    // Center of Rotation
+    }
+
+    // 5. Calculate Aerodynamic Coefficients
+    forceCoeffs_Wing
+    {
+        type            forceCoeffs;
+        libs            ("libforces.so");
+        writeControl    timeStep;   // Writes every N time steps
+        writeInterval   1;          // N = 1 (High resolution history)
+        
+        patches         ("Wing");
+        rho             rhoInf;
+        rhoInf          1.225;
+        
+        liftDir         (0 0 1);    // Z-axis
+        dragDir         (1 0 0);    // X-axis
+        pitchAxis       (0 1 0);    // Y-axis
+        
+        magUInf         20.0;       // Freestream velocity
+        lRef            0.232;      // Reference length
+        Aref            0.171;        // Reference area
+        CofR            (0.15 0 0);    // CG location for Pitching Moment
+    }
+}
+
+// ************************************************************************* //
