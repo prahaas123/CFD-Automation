@@ -4,7 +4,7 @@ Automates OpenFOAM CFD runs for an aircraft across multiple angles of attack, in
 
 ## Requirements
 
-- OpenFOAM
+- OpenFOAM (v13)
 - PyFoam
 - ParaView (`pvbatch`)
 - MPI (`mpirun`)

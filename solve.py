@@ -9,6 +9,7 @@ GEOMETRY_STL = "Wing.stl"
 
 def main():
     processors_per_job = 4
+    num_iterations = 300
     
     # Parameters
     cg = 0.25        # Center of gravity x-coordinate
@@ -49,7 +50,7 @@ def main():
         # 4. Solve
         print("[3/5] Solving (foamRun)...")
         try:
-            if not solve(job_directory, processors_per_job):
+            if not solve(job_directory, processors_per_job, num_iterations):
                 print(f"Error: Solver failed to complete for {job_id}. Skipping...")
                 continue
         except Exception as e:
@@ -100,13 +101,12 @@ def prepare(job_directory, processors_per_job, cg, u, c, S):
 
 def mesh(job_directory, job_id, alpha, processors_per_job):
     COMMANDS = [
-        f"surfaceTransformPoints -case {job_directory} -rotate-angle '((0 1 0) {alpha})' {job_directory}/{job_id}.stl {job_directory}/aoa.stl",
+        f"surfaceTransformPoints \"Ry={alpha}\" {job_directory}/{job_id}.stl {job_directory}/constant/geometry/Optimized_Wing.stl",
         f"blockMesh -case {job_directory}",
         f"surfaceFeatures -case {job_directory}",
         f"decomposePar -case {job_directory}",
         f"mpirun -np {processors_per_job} snappyHexMesh -case {job_directory} -parallel",
-        f"reconstructPar -case {job_directory} -constant",
-        f"rm -rf {job_directory}/processor*",
+        f"reconstructPar -case {job_directory} -constant"
     ]
 
     for command in COMMANDS:
@@ -114,18 +114,19 @@ def mesh(job_directory, job_id, alpha, processors_per_job):
         runner.start()
         if not runner.runOK():
             raise Exception(f"{command} failed")
+        
+    subprocess.run(f"rm -rf {job_directory}/processor*", shell=True)
 
     run_ok = True
     if not os.path.isdir(f"{job_directory}/constant/polyMesh"):
         run_ok = False
     return run_ok
 
-def solve(job_directory, processors_per_job):
+def solve(job_directory, processors_per_job, num_iterations):
     COMMANDS = [
         f"decomposePar -case {job_directory}",
-        f"mpirun --oversubscribe -np {processors_per_job} foamRun -case {job_directory} -parallel > log.foamRun &",
-        f"reconstructPar -case {job_directory} -constant",
-        f"rm -rf {job_directory}/proc*",
+        f"mpirun --oversubscribe -np {processors_per_job} foamRun -case {job_directory} -parallel",
+        f"reconstructPar -case {job_directory} -constant"
     ]
 
     for command in COMMANDS:
@@ -133,9 +134,11 @@ def solve(job_directory, processors_per_job):
         runner.start()
         if not runner.runOK():
             raise Exception(f"{command} failed")
+        
+    subprocess.run(f"rm -rf {job_directory}/processor*", shell=True)
 
     run_ok = True
-    if not os.path.isdir(f"{job_directory}/40"):
+    if not os.path.isdir(f"{job_directory}/{num_iterations}"):
         run_ok = False
     return run_ok
 
