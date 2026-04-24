@@ -10,15 +10,15 @@ FoamFile
     version     2.0;
     format      ascii;
     class       volScalarField;
-    object      k;
+    object      omega;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include        "include/initialConditions"
 
-dimensions      [0 2 -2 0 0 0 0];
+dimensions      [0 0 -1 0 0 0 0];
 
-internalField   uniform $turbulentKE;
+internalField   uniform $turbulentOmega;
 
 boundaryField
 {
@@ -34,7 +34,6 @@ boundaryField
         type            freestream;
         freestreamValue $internalField;
     }
-
     yMin
     {
         type            slip;
@@ -53,7 +52,7 @@ boundaryField
     }
     Wing
     {
-        type            kqRWallFunction;
+        type            omegaWallFunction;
         value           uniform 0;
     }
 

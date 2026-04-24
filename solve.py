@@ -12,12 +12,12 @@ def main():
     num_iterations = 300
     
     # Parameters
-    cg = 0.25        # Center of gravity x-coordinate
-    u = 50.0         # Freestream velocity (MagUInf)
-    c = 1.0          # Reference chord (lRef)
-    S = 1.0          # Reference area (Aref)
+    cg = 0.15          # Center of gravity x-coordinate
+    u = 20.0           # Freestream velocity (MagUInf)
+    c = 0.23           # Reference chord (lRef)
+    S = 0.171          # Reference area (Aref)
     
-    alphas = [0.0]
+    alphas = [3.0]
 
     for alpha in alphas:
         job_id = f"run_alpha_{int(alpha)}"
@@ -29,7 +29,7 @@ def main():
 
         # 1. Prepare Case Directory
         print("[1/5] Preparing case from template...")
-        if not prepare(job_directory, processors_per_job, cg, u, c, S):
+        if not prepare(job_directory, processors_per_job, cg, u, c, S, num_iterations):
             print(f"Error: Failed to prepare case for {job_id}. Skipping...")
             continue
             
@@ -38,7 +38,7 @@ def main():
         shutil.copy(GEOMETRY_STL, geom_target_path)
 
         # 3. Mesh Generation
-        print("[2/5] Generating mesh (blockMesh, snappyHexMesh)...")
+        print("[2/5] Generating mesh (cfMesh)...")
         try:
             if not mesh(job_directory, alpha, processors_per_job):
                 print(f"Error: Meshing failed to produce polyMesh for {job_id}. Skipping...")
@@ -71,7 +71,7 @@ def main():
         
         print(f"Successfully completed {job_id}!")
 
-def prepare(job_directory, processors_per_job, cg, u, c, S):
+def prepare(job_directory, processors_per_job, cg, u, c, S, num_iterations):
     try:
         case_template = SolutionDirectory("case_template")
         case_template.cloneCase(job_directory)
@@ -85,38 +85,38 @@ def prepare(job_directory, processors_per_job, cg, u, c, S):
         # controlDict
         control_dict_filepath = f"{job_directory}/system/controlDict"
         control_dict_file = ParsedParameterFile(control_dict_filepath)
-        control_dict_file["functions"]["forceCoeffs_Wing"]["lRef"] = c
-        control_dict_file["functions"]["forceCoeffs_Wing"]["Aref"] = S
-        control_dict_file["functions"]["forceCoeffs_Wing"]["MagUInf"] = u
+        control_dict_file["endTime"] = num_iterations
+        control_dict_file["functions"]["forceCoeffsWing"]["lRef"] = c
+        control_dict_file["functions"]["forceCoeffsWing"]["Aref"] = S
+        control_dict_file["functions"]["forceCoeffsWing"]["MagUInf"] = u
         CofR = f"({cg} 0 0)"
-        control_dict_file["functions"]["forceCoeffs_Wing"]["CofR"] = CofR
-        control_dict_file["functions"]["forces_Wing"]["CofR"] = CofR
+        control_dict_file["functions"]["forceCoeffsWing"]["CofR"] = CofR
+        control_dict_file["functions"]["forcesWing"]["CofR"] = CofR
+        control_dict_file["functions"]["binField1"]["CofR"] = CofR
+        
         control_dict_file.writeFile()
         
         run_ok = True
-    except:
+    except Exception as e:
+        print(f"Exception during preparation: {e}")
         run_ok = False
         
     return run_ok
 
 def mesh(job_directory, alpha, processors_per_job):
     COMMANDS = [
-        f"surfaceTransformPoints \"Ry={alpha}\" {GEOMETRY_STL} {job_directory}/constant/geometry/Optimized_Wing.stl",
-        f"blockMesh -case {job_directory}",
-        f"surfaceFeatures -case {job_directory}",
-        f"decomposePar -case {job_directory}",
-        f"mpirun -np {processors_per_job} snappyHexMesh -case {job_directory} -parallel",
-        f"reconstructPar -case {job_directory} -constant"
+        f"surfaceTransformPoints -case {job_directory} -rotate-angle '((0 1 0) {alpha})' Wing.stl {job_directory}/Wing.stl",
+        f"surfaceGenerateBoundingBox -case {job_directory} {job_directory}/Wing.stl {job_directory}/combined.stl 1 5 2 2 1 1",
+        f"surfaceFeatureEdges {job_directory}/combined.stl {job_directory}/combined.fms -angle 10 -case {job_directory}",
+        f"OMP_NUM_THREADS={processors_per_job} cartesianMesh -case {job_directory}"
     ]
 
     for command in COMMANDS:
-        runner = BasicRunner(argv=command.split(" "))
-        runner.start()
-        if not runner.runOK():
-            raise Exception(f"{command} failed")
-        
-    subprocess.run(f"rm -rf {job_directory}/processor*", shell=True)
-    subprocess.run(f"touch {job_directory}/para.foam", shell=True)
+        print(f"  -> Executing: {command}")
+        result = subprocess.run(command, shell=True, executable='/bin/bash')
+        if result.returncode != 0:
+            print(f"Meshing step failed on command: {command}")
+            return False
 
     run_ok = True
     if not os.path.isdir(f"{job_directory}/constant/polyMesh"):
@@ -125,9 +125,9 @@ def mesh(job_directory, alpha, processors_per_job):
 
 def solve(job_directory, processors_per_job, num_iterations):
     COMMANDS = [
-        f"decomposePar -case {job_directory}",
-        f"mpirun --oversubscribe -np {processors_per_job} foamRun -case {job_directory} -parallel",
-        f"reconstructPar -case {job_directory} -constant"
+        f"mpirun -np {processors_per_job} redistributePar -parallel -decompose -overwrite -case {job_directory}",
+        f"mpirun -np {processors_per_job} simpleFoam -parallel -case {job_directory}",
+        f"mpirun -np {processors_per_job} redistributePar -parallel -reconstruct -latestTime -case {job_directory}",
     ]
 
     for command in COMMANDS:
@@ -156,8 +156,9 @@ def postprocess(job_directory):
 
 def cleanup(job_directory):
     COMMANDS = [
-        f"python3 -m PyFoam.Applications.ClearCase {job_directory} --keep-postprocessing --processors-remove",
+        f"pyFoamClearCase.py {job_directory} --keep-postprocessing --processors-remove",
         f"rm -rf {job_directory}/constant/polyMesh",
+        f"rm -rf {job_directory}/PyFoam*",
         "rm -rf PyFoam*"
     ]
 

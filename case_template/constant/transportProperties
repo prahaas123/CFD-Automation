@@ -9,55 +9,14 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       volScalarField;
-    object      k;
+    class       dictionary;
+    object      transportProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include        "include/initialConditions"
+transportModel  Newtonian;
 
-dimensions      [0 2 -2 0 0 0 0];
-
-internalField   uniform $turbulentKE;
-
-boundaryField
-{
-    #includeEtc "caseDicts/setConstraintTypes"
-
-    xMin
-    {
-        type            freestream;
-        freestreamValue $internalField;
-    }
-    xMax
-    {
-        type            freestream;
-        freestreamValue $internalField;
-    }
-
-    yMin
-    {
-        type            slip;
-    }
-    yMax
-    {
-        type            slip;
-    }
-    zMin
-    {
-        type            slip;
-    }
-    zMax
-    {
-        type            slip;
-    }
-    Wing
-    {
-        type            kqRWallFunction;
-        value           uniform 0;
-    }
-
-}
+nu              1.5e-05;
 
 
 // ************************************************************************* //

@@ -1,15 +1,15 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-  =========                 |
-  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Version:  13
-     \\/     M anipulation  |
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2306                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
+    version     2.0;
     format      ascii;
     class       dictionary;
-    location    "system";
     object      fvSolution;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -19,16 +19,9 @@ solvers
     p
     {
         solver          GAMG;
-        tolerance       1e-07;
-        relTol          0.1;
         smoother        GaussSeidel;
-    }
-
-    pFinal
-    {
-        $p;
         tolerance       1e-6;
-        relTol          0;
+        relTol          0.01;
     }
 
     Phi
@@ -36,18 +29,38 @@ solvers
         $p;
     }
 
-    "(U|nuTilda)"
+    U
     {
         solver          smoothSolver;
         smoother        GaussSeidel;
-        tolerance       1e-08;
+        tolerance       1e-8;
+        relTol          0.01;
+        nSweeps         1;
+    }
+
+    k
+    {
+        solver          smoothSolver;
+        smoother        GaussSeidel;
+        tolerance       1e-8;
         relTol          0.1;
+        nSweeps         1;
+    }
+
+    omega
+    {
+        solver          smoothSolver;
+        smoother        GaussSeidel;
+        tolerance       1e-8;
+        relTol          0.1;
+        nSweeps         1;
     }
 }
 
 SIMPLE
 {
-    nNonOrthogonalCorrectors 0;
+    nNonOrthogonalCorrectors 1;
+    consistent yes;
 }
 
 potentialFlow
@@ -57,15 +70,20 @@ potentialFlow
 
 relaxationFactors
 {
-    p               0.3;
-    U               0.5;
-    nuTilda         0.5;
+    equations
+    {
+        p               0.3;
+        U               0.3;
+        k               0.3;
+        omega           0.3;
+    }
 }
 
 cache
 {
     grad(U);
 }
+
 
 
 // ************************************************************************* //

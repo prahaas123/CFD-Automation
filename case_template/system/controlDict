@@ -1,20 +1,20 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-  =========                 |
-  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Version:  13
-     \\/     M anipulation  |
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2306                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
+    version     2.0;
     format      ascii;
     class       dictionary;
-    location    "system";
     object      controlDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-solver          incompressibleFluid;
+application     foamRun;
 
 startFrom       startTime;
 
@@ -22,17 +22,17 @@ startTime       0;
 
 stopAt          endTime;
 
-endTime         300;
+endTime         300.0;
 
-deltaT          1;
+deltaT          1.0;
 
 writeControl    timeStep;
 
-writeInterval   300;
+writeInterval   1;
 
 purgeWrite      0;
 
-writeFormat     binary;
+writeFormat     ascii;
 
 writePrecision  6;
 
@@ -44,68 +44,95 @@ timePrecision   6;
 
 runTimeModifiable true;
 
+allowSystemOperations 1;
+
 functions
 {
-    // 1. Calculate y+ on the Wing
-    yPlus_Wing
+    forceCoeffsWing
+    {
+        type            forceCoeffs;
+        libs            (forces);
+        writeControl    timeStep;
+        writeInterval   1;
+        log             yes;
+        patches         (Wing);
+        rho             rhoInf;
+        rhoInf          1.225;
+        liftDir         (0 0 1);
+        dragDir         (1 0 0);
+        CofR            (0.15 0 0);  // GEOMETRY DEPENDANT - CHANGE ME
+        pitchAxis       (0 1 0);
+        magUInf         20;
+        lRef            0.23;        // GEOMETRY DEPENDANT - CHANGE ME
+        Aref            0.171;        // GEOMETRY DEPENDANT - CHANGE ME
+    }
+    
+    yPlus
     {
         type            yPlus;
         libs            ("libfieldFunctionObjects.so");
-        writeControl    writeTime;
-        patches         ("Wing"); // Only calculates on this patch
+        writeControl    timeStep;   
     }
 
-    // 2. Calculate Vorticity Field
-    vorticity_field
+    wallShearStress1
     {
-        type            vorticity;
-        libs            ("libfieldFunctionObjects.so");
-        writeControl    writeTime;
+        type            wallShearStress;
+        libs            (fieldFunctionObjects);
+        patches         (Wing); 
+        writeToFile     true;
     }
 
-    // 3. Calculate Q-Criterion Field (for 3D wake)
-    Q_field
+    forcesWing
+    {
+        type        forces;
+        libs        ("libforces.so");
+        writeControl    timeStep;
+        writeInterval   1;
+        patches     (Wing);          
+        p           p;
+        U           U;
+        rho         rhoInf;           
+        rhoInf      1.225;             
+        pRef        0;            
+        CofR        (0.15 0 0);           // GEOMETRY DEPENDANT - CHANGE ME
+        writeFields     yes;
+    }
+    binField1
+    {
+        type                    binField;
+        libs                    (fieldFunctionObjects);
+        binModel                singleDirectionUniformBin;
+        fields                  (force);
+        patches                 (Wing);
+        decomposePatchValues    yes;
+        CofR                    (0.15 0 0);  // GEOMETRY DEPENDANT - CHANGE ME
+        binData
+        {
+            nBin        30;          // output data into n bins
+            direction   (1 0 0);     // bin direction
+            cumulative  yes;
+        }
+        writeControl            writeTime;
+    }
+    qCriterion
     {
         type            Q;
         libs            ("libfieldFunctionObjects.so");
         writeControl    writeTime;
+        writeInterval   1;
     }
-
-    // 4. Calculate Raw Forces (Newtons)
-    forces_Wing
+    vorticity
     {
-        type            forces;
-        libs            ("libforces.so");
-        writeControl    timeStep;   // Writes every N time steps
-        writeInterval   1;          // N = 1 (High resolution history)
-        
-        patches         ("Wing");
-        rho             rhoInf;
-        rhoInf          1.225;
-        CofR            (0.15 0 0);    // Center of Rotation
+        type            vorticity;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    writeTime;
+        writeInterval   1;
     }
+}
 
-    // 5. Calculate Aerodynamic Coefficients
-    forceCoeffs_Wing
-    {
-        type            forceCoeffs;
-        libs            ("libforces.so");
-        writeControl    timeStep;   // Writes every N time steps
-        writeInterval   1;          // N = 1 (High resolution history)
-        
-        patches         ("Wing");
-        rho             rhoInf;
-        rhoInf          1.225;
-        
-        liftDir         (0 0 1);    // Z-axis
-        dragDir         (1 0 0);    // X-axis
-        pitchAxis       (0 1 0);    // Y-axis
-        
-        magUInf         20.0;       // Freestream velocity
-        lRef            0.232;      // Reference length
-        Aref            0.171;        // Reference area
-        CofR            (0.15 0 0);    // CG location for Pitching Moment
-    }
+OptimisationSwitches
+{
+    fileHandler collated;
 }
 
 // ************************************************************************* //
