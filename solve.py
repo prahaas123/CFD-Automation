@@ -1,6 +1,6 @@
 import os
 import subprocess
-import shutil
+import csv
 from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 from PyFoam.Execution.BasicRunner import BasicRunner
@@ -18,6 +18,7 @@ def main():
     S = 0.171          # Reference area (Aref)
     
     alphas = [3.0]
+    initialize_results_csv()
 
     for alpha in alphas:
         job_id = f"run_alpha_{int(alpha)}"
@@ -60,7 +61,7 @@ def main():
         # 5. Post-Process
         print("[4/5] Running ParaView post-processing...")
         try:
-            if not postprocess(job_directory):
+            if not postprocess(job_directory, job_id):
                 print(f"Warning: Post-processing failed or images not generated for {job_id}.")
         except Exception as e:
             print(f"Exception during post-processing: {e}")
@@ -70,6 +71,20 @@ def main():
         cleanup(job_directory)
         
         print(f"Successfully completed {job_id}!")
+        
+def initialize_results_csv():
+    """Deletes old results.csv if it exists and initializes a fresh one with headers."""
+    csv_file_path = "results.csv"
+    if os.path.exists(csv_file_path):
+        os.remove(csv_file_path)
+        print(f"[*] Deleted existing {csv_file_path}")
+    with open(csv_file_path, mode='w', newline='') as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow([
+            "Alpha", "CL", "CD", "L/D", "CM", 
+            "Lift_N", "Drag_N", "Avg_yPlus", "Max_yPlus"
+        ])
+    print(f"[*] Initialized fresh {csv_file_path} for new data sweep.")
 
 def prepare(job_directory, processors_per_job, cg, u, c, S, num_iterations):
     try:
@@ -92,9 +107,13 @@ def prepare(job_directory, processors_per_job, cg, u, c, S, num_iterations):
         CofR = f"({cg} 0 0)"
         control_dict_file["functions"]["forceCoeffsWing"]["CofR"] = CofR
         control_dict_file["functions"]["forcesWing"]["CofR"] = CofR
-        control_dict_file["functions"]["binField1"]["CofR"] = CofR
-        
         control_dict_file.writeFile()
+        
+        # initialConditions
+        initial_cond_filepath = f"{job_directory}/0/include/initialConditions"
+        initial_cond_file = ParsedParameterFile(initial_cond_filepath)
+        initial_cond_file["flowVelocity"] = f"({u} 0 0)"
+        initial_cond_file.writeFile()
         
         run_ok = True
     except Exception as e:
@@ -143,10 +162,13 @@ def solve(job_directory, processors_per_job, num_iterations):
         run_ok = False
     return run_ok
 
-def postprocess(job_directory):
+def postprocess(job_directory, job_id):
     os.makedirs(f"{job_directory}/images", exist_ok=True)
-    command = f"export PYTHONPATH=\"/usr/lib/python3/dist-packages:$PYTHONPATH\" && LIBGL_ALWAYS_SOFTWARE=1 pvbatch post_process.py {job_directory}/para.foam {job_directory}/images"
+    command = f"export PYTHONPATH=\"/usr/lib/python3/dist-packages:$PYTHONPATH\" && LIBGL_ALWAYS_SOFTWARE=1 pvbatch post_process.py {job_directory}/{job_id}.foam {job_directory}/images"
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    
+    if result.stdout:
+        print(result.stdout)
     
     if result.returncode != 0:
         print(f"ParaView failed with error:\n{result.stderr}")

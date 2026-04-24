@@ -97,23 +97,6 @@ functions
         CofR        (0.15 0 0);           // GEOMETRY DEPENDANT - CHANGE ME
         writeFields     yes;
     }
-    binField1
-    {
-        type                    binField;
-        libs                    (fieldFunctionObjects);
-        binModel                singleDirectionUniformBin;
-        fields                  (force);
-        patches                 (Wing);
-        decomposePatchValues    yes;
-        CofR                    (0.15 0 0);  // GEOMETRY DEPENDANT - CHANGE ME
-        binData
-        {
-            nBin        30;          // output data into n bins
-            direction   (1 0 0);     // bin direction
-            cumulative  yes;
-        }
-        writeControl            writeTime;
-    }
     qCriterion
     {
         type            Q;
