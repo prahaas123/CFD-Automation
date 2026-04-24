@@ -13,6 +13,5 @@
 module load python/3.13.13
 module load openfoam/v2312
 module load paraview/6.1.0
-module spider matplotlib/3.10.8
 
 python3 solve.py
