@@ -10,7 +10,7 @@ from PyFoam.Execution.BasicRunner import BasicRunner
 GEOMETRY_STL = "Wing.stl"
 
 def main():
-    processors_per_job = 4
+    processors_per_job = 50
     num_iterations = 300
     
     # Parameters

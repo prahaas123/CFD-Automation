@@ -18,14 +18,14 @@ FoamFile
 
 surfaceFile "combined.fms";
 
-maxCellSize 0.3;
+maxCellSize 0.25;
 
 localRefinement
 {
     Wing
     {
-        additionalRefinementLevels 6;
-        refinementThickness 0.1;
+        additionalRefinementLevels 9;
+        refinementThickness 0.05;
     }
 }
 
@@ -38,7 +38,7 @@ boundaryLayers
             nLayers 10;
             thicknessRatio 1.2;
             maxFirstLayerThickness 0.000116;
-            allowDiscontinuity 1; 
+            allowDiscontinuity 0; 
         }
     }
     optimiseLayer 1;
@@ -54,44 +54,24 @@ boundaryLayers
 
 // objectRefinements
 // {
-//     refinement1
-//     {
-//         type cone;
-//         cellSize 0.25;
-//         centre (0.5 0 0);
-//         p0 (-2 0 0);
-//         p1 (8 0 0);
-//         radius0 3;
-//         radius1 3;
-//     }
-//     refinement2
-//     {
-//         type cone;
-//         cellSize 0.1;
-//         centre (0.5 0 0);
-//         p0 (-1 0 0);
-//         p1 (5 0 0);
-//         radius0 2;
-//         radius1 2;
-//     }
-//     refinement3
+//     trailingEdgeRefinement
 //     {
 //         type box;
-//         cellSize 0.05;
-//         centre (1.75 0 0);
-//         lengthX 4.5;
-//         lengthY 3;
-//         lengthZ 1.55;
+//         additionalRefinementLevels 2;
+//         centre (0.2 0 0);
+//         lengthX 0.1;
+//         lengthY 1.0;
+//         lengthZ 0.5;
 //     }
-//     refinement4
-//     {
-//         type box;
-//         cellSize 0.01;
-//         centre (1.5 0 0);
-//         lengthX 3.5;
-//         lengthY 1.75;
-//         lengthZ 1;
-//     }
+    // LeadingEdgeRefinement
+    // {
+    //     type box;
+    //     cellSize 0.001;
+    //     centre (0.2 0 0);
+    //     lengthX 0.1;
+    //     lengthY 1.0;
+    //     lengthZ 0.5;
+    // }
 // }
 
 // ************************************************************************* //
