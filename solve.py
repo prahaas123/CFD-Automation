@@ -1,5 +1,7 @@
 import os
 import subprocess
+import shutil
+import re
 import csv
 from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
@@ -111,9 +113,12 @@ def prepare(job_directory, processors_per_job, cg, u, c, S, num_iterations):
         
         # initialConditions
         initial_cond_filepath = f"{job_directory}/0/include/initialConditions"
-        initial_cond_file = ParsedParameterFile(initial_cond_filepath)
-        initial_cond_file["flowVelocity"] = f"({u} 0 0)"
-        initial_cond_file.writeFile()
+        with open(initial_cond_filepath, 'r') as file:
+            file_data = file.read()
+        file_data = re.sub(r'flowVelocity\s+.*;', f'flowVelocity      ({u} 0 0);', file_data)
+
+        with open(initial_cond_filepath, 'w') as file:
+            file.write(file_data)
         
         run_ok = True
     except Exception as e:

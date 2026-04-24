@@ -2,3 +2,4 @@
 .vscode/
 PyFoam*
 run_*
+results.csv
