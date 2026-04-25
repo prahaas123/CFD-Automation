@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # check if python is installed and is version 3.13
+module load python/3.13
 PYTHON_VERSION=$(python3 -c "import sys; print(str(sys.version_info.major) + '.' + str(sys.version_info.minor))")
 if [ "$PYTHON_VERSION" = "3.13" ]; then
     echo "You are using Python 3.13."
