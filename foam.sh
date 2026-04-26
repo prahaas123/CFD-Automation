@@ -18,4 +18,11 @@ module load python/3.13.2
 module load openfoam/v2312
 source .venv/bin/activate
 
+virtualenv --no-download $SLURM_TMPDIR/env
+source $SLURM_TMPDIR/env/bin/activate
+pip install --no-index --upgrade pip
+pip install --no-index -r requirements-hpc.txt
+
+export SQUEUE_FORMAT='%i","%j","%t","%M","%L","%D","%C","%m","%b","%R'
+
 python3 solve.py
