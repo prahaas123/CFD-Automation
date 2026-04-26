@@ -16,7 +16,6 @@ module load openmpi/4.1.5
 module load paraview/6.0.0
 module load python/3.13.2
 module load openfoam/v2312
-source .venv/bin/activate
 
 virtualenv --no-download $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
