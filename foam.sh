@@ -10,8 +10,12 @@
 #SBATCH --output=Wing.log
 #SBATCH --open-mode=append
 
-module load openfoam/v2312
+module load StdEnv/2023
+module load gcc/12.3
+module load openmpi/4.1.5
+module load paraview/6.0.0
 module load python/3.13.2
+module load openfoam/v2312
 source .venv/bin/activate
 
 python3 solve.py
