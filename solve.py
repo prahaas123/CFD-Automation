@@ -169,7 +169,11 @@ def solve(job_directory, processors_per_job, num_iterations):
 
 def postprocess(job_directory, job_id):
     os.makedirs(f"{job_directory}/images", exist_ok=True)
-    command = f"export PYTHONPATH=\"/usr/lib/python3/dist-packages:$PYTHONPATH\" && LIBGL_ALWAYS_SOFTWARE=1 pvbatch post_process.py {job_directory}/{job_id}.foam {job_directory}/images"
+    venv_site_packages = os.path.join(os.environ.get("VIRTUAL_ENV", ""), "lib/python3.13/site-packages")
+    command = (
+        f"export PYTHONPATH=\"{venv_site_packages}:/usr/lib/python3/dist-packages:$PYTHONPATH\" && "
+        f"LIBGL_ALWAYS_SOFTWARE=1 pvbatch post_process.py {job_directory}/{job_id}.foam {job_directory}/images"
+    )
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     
     if result.stdout:
