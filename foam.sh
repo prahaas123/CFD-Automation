@@ -20,7 +20,7 @@ module load openfoam/v2312
 virtualenv --no-download $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
 pip install --no-index --upgrade pip
-pip install --no-index -r requirements-hpc.txt
+pip install --find-links=$SCRATCH/pyfoam_wheel --no-index PyFoam matplotlib==3.10.9
 
 export SQUEUE_FORMAT='%i","%j","%t","%M","%L","%D","%C","%m","%b","%R'
 
