@@ -11,7 +11,7 @@ GEOMETRY_STL = "Wing.stl"
 
 def main():
     processors_per_job = 50
-    num_iterations = 300
+    num_iterations = 1000
     
     # Parameters
     cg = 0.05          # Center of gravity x-coordinate
@@ -19,7 +19,7 @@ def main():
     c = 0.23           # Reference chord (lRef)
     S = 0.171          # Reference area (Aref)
     
-    alphas = [3.0]
+    alphas = [0.0, 3.0, 6.0]
     initialize_results_csv()
 
     for alpha in alphas:
@@ -170,7 +170,7 @@ def solve(job_directory, processors_per_job, num_iterations):
 def postprocess(job_directory, job_id):
     os.makedirs(f"{job_directory}/images", exist_ok=True)
     command = (
-        f"LIBGL_ALWAYS_SOFTWARE=1 pvbatch post_process.py {job_directory}/{job_id}.foam {job_directory}/images"
+        f"LIBGL_ALWAYS_SOFTWARE=1 python3 post_process.py {job_directory}/{job_id}.foam {job_directory}/images"
     )
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     

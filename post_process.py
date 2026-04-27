@@ -14,7 +14,7 @@ paraview.simple._DisableFirstRenderCameraReset()
 # ==============================================================================
 
 # Global camera focus point (Center of your wing)
-FOCAL_POINT = [0.15, 0.5, 0.18]
+FOCAL_POINT = [0.0, 0.0, 0.0]
 
 # Global output resolutions
 VIEW_SIZE_HIRES = [15360, 8640]
@@ -22,18 +22,18 @@ VIEW_SIZE_STANDARD = [3840, 2160]
 
 # The 5 primary views for 3D outputs (Geometry, Cp, Y+, Shear, Streamlines)
 VIEWS_3D = {
-    "diagonal": {"position": [-0.65, -0.49, 0.84], "view_up": [0.37, 0.31, 0.87]},
-    "front":    {"position": [-1.10, 0.5, 0.05],  "view_up": [0, 0, 1]},
-    "side":     {"position": [0.4, -0.95, 0.16],  "view_up": [0, 0, 1]},
-    "top":      {"position": [0.29, 0.5, 1.83],   "view_up": [-1, 0, 0]}
+    "diagonal": {"position": [-0.65, 0.0, 0.25], "view_up": [0.37, 0.31, 0.87]},
+    "front":    {"position": [-1.10, 0.0, 0.0],  "view_up": [0, 0, 1]},
+    "side":     {"position": [0.0, -1.0, 0.0],  "view_up": [0, 0, 1]},
+    "top":      {"position": [0.0, 0.0, 1.83],   "view_up": [-1, 0, 0]}
 }
 
 # The camera used for 2D Slice outputs (Mesh, Pressure Slice, Velocity Slice)
 VIEW_2D_SLICE = {
-    "position": [0.22, 1.1, 0.05],
-    "focal_point": [0.22, 0.0, 0.05],
+    "position": [0.05, -0.75, 0.0],
+    "focal_point": [0.05, 0.0, 0.0],
     "view_up": [0, 0, 1],
-    "slice-origin": [0.4, 0.6, 0.25],
+    "slice-origin": [0.0, 0.0, 0.0],
     "slice-normal": [0, 1, 0]
 }
 
@@ -238,8 +238,8 @@ def streamlines():
     streamTracer = StreamTracer(Input=reader1, SeedType="Line")
     
     # Seed points
-    streamTracer.SeedType.Point1 = [-0.5, -0.05, 0.03]
-    streamTracer.SeedType.Point2 = [-0.5, 1.1, 0.03]
+    streamTracer.SeedType.Point1 = [-0.5, -0.75, 0.0]
+    streamTracer.SeedType.Point2 = [-0.5, 0.75, 0.0]
     streamTracer.SeedType.Resolution = 200
     streamTracer.Vectors = ["POINTS", "U"]
     
