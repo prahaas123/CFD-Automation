@@ -21,6 +21,7 @@ virtualenv --no-download $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
 pip install --no-index --upgrade pip
 pip install --find-links=$SCRATCH/pyfoam_wheel --no-index PyFoam matplotlib==3.10.9
+find $SLURM_TMPDIR/env/lib/python3.13/site-packages/PyFoam -name "*.py" -exec sed -i 's/PyFoam\.ThirdParty\.six/six/g' {} +
 
 export SQUEUE_FORMAT='%i","%j","%t","%M","%L","%D","%C","%m","%b","%R'
 
