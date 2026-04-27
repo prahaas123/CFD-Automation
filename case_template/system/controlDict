@@ -30,7 +30,7 @@ writeControl    timeStep;
 
 writeInterval   1;
 
-purgeWrite      0;
+purgeWrite      2;
 
 writeFormat     ascii;
 
@@ -60,7 +60,7 @@ functions
         rhoInf          1.225;
         liftDir         (0 0 1);
         dragDir         (1 0 0);
-        CofR            (0.15 0 0);  // GEOMETRY DEPENDANT - CHANGE ME
+        CofR            (0.05 0 0);  // GEOMETRY DEPENDANT - CHANGE ME
         pitchAxis       (0 1 0);
         magUInf         20;
         lRef            0.23;        // GEOMETRY DEPENDANT - CHANGE ME
@@ -80,6 +80,8 @@ functions
         libs            (fieldFunctionObjects);
         patches         (Wing); 
         writeToFile     true;
+        writeControl    timeStep;
+        writeInterval   50;
     }
 
     forcesWing
@@ -94,22 +96,22 @@ functions
         rho         rhoInf;           
         rhoInf      1.225;             
         pRef        0;            
-        CofR        (0.15 0 0);           // GEOMETRY DEPENDANT - CHANGE ME
+        CofR        (0.05 0 0);           // GEOMETRY DEPENDANT - CHANGE ME
         writeFields     yes;
     }
     qCriterion
     {
         type            Q;
         libs            ("libfieldFunctionObjects.so");
-        writeControl    writeTime;
-        writeInterval   1;
+        writeControl    timeStep;
+        writeInterval   50;
     }
     vorticity
     {
         type            vorticity;
         libs            ("libfieldFunctionObjects.so");
-        writeControl    writeTime;
-        writeInterval   1;
+        writeControl    timeStep;
+        writeInterval   50;
     }
 }
 

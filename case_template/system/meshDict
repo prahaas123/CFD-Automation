@@ -18,13 +18,13 @@ FoamFile
 
 surfaceFile "combined.fms";
 
-maxCellSize 0.25;
+maxCellSize 0.2;
 
 localRefinement
 {
     Wing
     {
-        additionalRefinementLevels 9;
+        additionalRefinementLevels 7;
         refinementThickness 0.05;
     }
 }
@@ -35,9 +35,9 @@ boundaryLayers
     {
         Wing
         {
-            nLayers 10;
+            nLayers 5;
             thicknessRatio 1.2;
-            maxFirstLayerThickness 0.000116;
+            maxFirstLayerThickness 0.0003;
             allowDiscontinuity 0; 
         }
     }

@@ -59,7 +59,7 @@ solvers
 
 SIMPLE
 {
-    nNonOrthogonalCorrectors 1;
+    nNonOrthogonalCorrectors 3;
     consistent yes;
 }
 
@@ -72,10 +72,10 @@ relaxationFactors
 {
     equations
     {
-        p               0.3;
-        U               0.3;
-        k               0.3;
-        omega           0.3;
+        p               0.2;
+        U               0.4;
+        k               0.4;
+        omega           0.4;
     }
 }
 
