@@ -19,7 +19,7 @@ def main():
     c = 0.23           # Reference chord (lRef)
     S = 0.171          # Reference area (Aref)
     
-    alphas = [0.0, 3.0, 6.0]
+    alphas = [0.0, 3.0, 6.0, 7.0, 8.0, 9.0, 10.0]
     initialize_results_csv()
 
     for alpha in alphas:
