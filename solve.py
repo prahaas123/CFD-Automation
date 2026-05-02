@@ -51,28 +51,28 @@ def main():
             continue
 
         # 4. Solve
-        # print("[3/5] Solving (foamRun)...")
-        # try:
-        #     if not solve(job_directory, processors_per_job, num_iterations):
-        #         print(f"Error: Solver failed to complete for {job_id}. Skipping...")
-        #         continue
-        # except Exception as e:
-        #     print(f"Exception during solving: {e}")
-        #     continue
+        print("[3/5] Solving (foamRun)...")
+        try:
+            if not solve(job_directory, processors_per_job, num_iterations):
+                print(f"Error: Solver failed to complete for {job_id}. Skipping...")
+                continue
+        except Exception as e:
+            print(f"Exception during solving: {e}")
+            continue
 
-        # # 5. Post-Process
-        # print("[4/5] Running ParaView post-processing...")
-        # try:
-        #     if not postprocess(job_directory, job_id):
-        #         print(f"Warning: Post-processing failed or images not generated for {job_id}.")
-        # except Exception as e:
-        #     print(f"Exception during post-processing: {e}")
+        # 5. Post-Process
+        print("[4/5] Running ParaView post-processing...")
+        try:
+            if not postprocess(job_directory, job_id):
+                print(f"Warning: Post-processing failed or images not generated for {job_id}.")
+        except Exception as e:
+            print(f"Exception during post-processing: {e}")
 
-        # # 6. Clean Up
-        # print("[5/5] Cleaning up heavy mesh/processor files...")
-        # cleanup(job_directory)
+        # 6. Clean Up
+        print("[5/5] Cleaning up heavy mesh/processor files...")
+        cleanup(job_directory)
         
-        # print(f"Successfully completed {job_id}!")
+        print(f"Successfully completed {job_id}!")
         
 def initialize_results_csv():
     """Deletes old results.csv if it exists and initializes a fresh one with headers."""
