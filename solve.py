@@ -3,6 +3,7 @@ import subprocess
 import shutil
 import re
 import csv
+import glob
 from PyFoam.RunDictionary.SolutionDirectory import SolutionDirectory
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 from PyFoam.Execution.BasicRunner import BasicRunner
@@ -19,7 +20,7 @@ def main():
     c = 0.23           # Reference chord (lRef)
     S = 0.171          # Reference area (Aref)
     
-    alphas = [0.0, 3.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+    alphas = [0.0, 3.0, 6.0]
     initialize_results_csv()
 
     for alpha in alphas:
@@ -170,7 +171,7 @@ def solve(job_directory, processors_per_job, num_iterations):
 def postprocess(job_directory, job_id):
     os.makedirs(f"{job_directory}/images", exist_ok=True)
     command = (
-        f"LIBGL_ALWAYS_SOFTWARE=1 pvbatch post_process.py {job_directory}/{job_id}.foam {job_directory}/images"
+        f"LIBGL_ALWAYS_SOFTWARE=1 pvbatch --force-offscreen-rendering post_process.py {job_directory}/{job_id}.foam {job_directory}/images"
     )
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     
@@ -181,13 +182,14 @@ def postprocess(job_directory, job_id):
         print(f"ParaView failed with error:\n{result.stderr}")
         return False
         
-    return os.path.isdir(f"{job_directory}/images")
+    images = glob.glob(f"{job_directory}/images/*.png")
+    return len(images) > 0
 
 def cleanup(job_directory):
     COMMANDS = [
-        f"pyFoamClearCase.py {job_directory} --keep-postprocessing --processors-remove",
         f"rm -rf {job_directory}/constant/polyMesh",
         f"rm -rf {job_directory}/PyFoam*",
+        f"rm -rf {job_directory}/processors*",
         "rm -rf PyFoam*"
     ]
 

@@ -17,7 +17,7 @@ paraview.simple._DisableFirstRenderCameraReset()
 FOCAL_POINT = [0.0, 0.0, 0.0]
 
 # Global output resolutions
-VIEW_SIZE_HIRES = [15360, 8640]
+VIEW_SIZE_HIRES = [3840, 2160]
 VIEW_SIZE_STANDARD = [3840, 2160]
 
 # The 5 primary views for 3D outputs (Geometry, Cp, Y+, Shear, Streamlines)
