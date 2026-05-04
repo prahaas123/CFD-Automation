@@ -5,6 +5,7 @@
 |   \\  /    A nd           | Author: Prahaas Kotni                          |
 |    \\/     M anipulation  |                                                |
 \*---------------------------------------------------------------------------*/
+
 FoamFile
 {
     version   2.0;
@@ -17,61 +18,58 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 surfaceFile "combined.fms";
-
 maxCellSize 0.1;
+boundaryCellSize 0.1;
 
 localRefinement
 {
     Wing
     {
-        additionalRefinementLevels 6;
+        cellSize 0.005;
         refinementThickness 0.03;
     }
 }
 
 boundaryLayers
 {
+    nLayers 0;
+
     patchBoundaryLayers
     {
         Wing
         {
-            nLayers 10;
+            nLayers 5;
             thicknessRatio 1.2;
-            // maxFirstLayerThickness 0.0003;
-            // allowDiscontinuity 0; 
+            maxFirstLayerThickness 0.0005;
+            allowExposedEdges true;
         }
     }
+
     optimiseLayer 1;
-    optimisationParameters
+    untangleLayers 1;
+}
+
+objectRefinements
+{
+    wakeRegion
     {
-        nSmoothNormals 15;            // More smoothing iterations
-        nSmoothSurfaceNormals 10;
-        nSmoothThickness 10;
-        reCalculateNormals 1;
-        maxNumIterations 15;
+        type        box;
+        centre      (1.1 0 0);
+        lengthX     2.0;
+        lengthY     1.0;
+        lengthZ     0.4;
+        cellSize    0.02;
     }
 }
 
-// objectRefinements
-// {
-//     trailingEdgeRefinement
-//     {
-//         type box;
-//         additionalRefinementLevels 2;
-//         centre (0.2 0 0);
-//         lengthX 0.1;
-//         lengthY 1.0;
-//         lengthZ 0.5;
-//     }
-    // LeadingEdgeRefinement
-    // {
-    //     type box;
-    //     cellSize 0.001;
-    //     centre (0.2 0 0);
-    //     lengthX 0.1;
-    //     lengthY 1.0;
-    //     lengthZ 0.5;
-    // }
-// }
+meshQualityControls
+{
+    maxNonOrthogonality 65;
+    maxSkewness 4;
+    minTetQuality 1e-15;
+    minVol 1e-13;
 
-// ************************************************************************* //
+    nSmoothScale 4; 
+    nSmoothNormals 3; 
+    nSmoothSurface 3;
+}
