@@ -11,7 +11,7 @@ from PyFoam.Execution.BasicRunner import BasicRunner
 GEOMETRY_STL = "Wing.stl"
 
 def main():
-    processors_per_job = 50
+    processors_per_job = 4
     num_iterations = 1000
     
     # Parameters
@@ -20,7 +20,7 @@ def main():
     c = 0.23           # Reference chord (lRef)
     S = 0.171          # Reference area (Aref)
     
-    alphas = [0.0, 3.0, 6.0]
+    alphas = [0.0]
     initialize_results_csv()
 
     for alpha in alphas:
@@ -42,7 +42,7 @@ def main():
         shutil.copy(GEOMETRY_STL, geom_target_path)
 
         # 3. Mesh Generation
-        print("[2/5] Generating mesh (cfMesh)...")
+        print("[2/5] Generating mesh (snappyHexMesh)...")
         try:
             if not mesh(job_directory, alpha, processors_per_job):
                 print(f"Error: Meshing failed to produce polyMesh for {job_id}. Skipping...")
@@ -52,28 +52,28 @@ def main():
             continue
 
         # 4. Solve
-        print("[3/5] Solving (foamRun)...")
-        try:
-            if not solve(job_directory, processors_per_job, num_iterations):
-                print(f"Error: Solver failed to complete for {job_id}. Skipping...")
-                continue
-        except Exception as e:
-            print(f"Exception during solving: {e}")
-            continue
+        # print("[3/5] Solving (foamRun)...")
+        # try:
+        #     if not solve(job_directory, processors_per_job, num_iterations):
+        #         print(f"Error: Solver failed to complete for {job_id}. Skipping...")
+        #         continue
+        # except Exception as e:
+        #     print(f"Exception during solving: {e}")
+        #     continue
 
-        # 5. Post-Process
-        print("[4/5] Running ParaView post-processing...")
-        try:
-            if not postprocess(job_directory, job_id):
-                print(f"Warning: Post-processing failed or images not generated for {job_id}.")
-        except Exception as e:
-            print(f"Exception during post-processing: {e}")
+        # # 5. Post-Process
+        # print("[4/5] Running ParaView post-processing...")
+        # try:
+        #     if not postprocess(job_directory, job_id):
+        #         print(f"Warning: Post-processing failed or images not generated for {job_id}.")
+        # except Exception as e:
+        #     print(f"Exception during post-processing: {e}")
 
-        # 6. Clean Up
-        print("[5/5] Cleaning up heavy mesh/processor files...")
-        cleanup(job_directory)
+        # # 6. Clean Up
+        # print("[5/5] Cleaning up heavy mesh/processor files...")
+        # cleanup(job_directory)
         
-        print(f"Successfully completed {job_id}!")
+        # print(f"Successfully completed {job_id}!")
         
 def initialize_results_csv():
     """Deletes old results.csv if it exists and initializes a fresh one with headers."""
@@ -130,12 +130,16 @@ def prepare(job_directory, processors_per_job, cg, u, c, S, num_iterations):
 
 def mesh(job_directory, alpha, processors_per_job):
     COMMANDS = [
-        f"surfaceTransformPoints -case {job_directory} -rotate-angle '((0 1 0) {alpha})' Wing.stl {job_directory}/Wing.stl",
-        f"surfaceGenerateBoundingBox -case {job_directory} {job_directory}/Wing.stl {job_directory}/combined.stl 1 5 2 2 1 1",
-        f"surfaceFeatureEdges {job_directory}/combined.stl {job_directory}/combined.fms -angle 10 -case {job_directory}",
-        f"OMP_NUM_THREADS={processors_per_job} cartesianMesh -case {job_directory}"
+        f"surfaceTransformPoints -rotate-angle '((0 1 0) {alpha})' Wing.stl {job_directory}/constant/triSurface/Wing.stl",
+        f"surfaceFeatureExtract -case {job_directory}",
+        f"blockMesh -case {job_directory}",
+        f"decomposePar -case {job_directory}",
+        f"mpirun -np {processors_per_job} snappyHexMesh -parallel -overwrite -case {job_directory}",
+        f"reconstructParMesh -constant -case {job_directory}",
+        f"rm -rf {job_directory}/processor*"
     ]
-
+    
+    os.makedirs(f"{job_directory}/constant/triSurface", exist_ok=True)
     for command in COMMANDS:
         print(f"  -> Executing: {command}")
         result = subprocess.run(command, shell=True, executable='/bin/bash')

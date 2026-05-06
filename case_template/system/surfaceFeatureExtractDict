@@ -1,0 +1,20 @@
+/*--------------------------------*- C#  -*----------------------------------*\
+  =========                 |
+  \\      /  Field         | OpenFOAM: The Open Source CFD Toolbox
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      surfaceFeatureExtractDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+Wing.stl
+{
+    extractionMethod    extractFromSurface;
+    extractFeaturesByAngle true;
+    includedAngle       150;
+    writeObj            yes;
+}
