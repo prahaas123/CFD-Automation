@@ -11,16 +11,16 @@ from PyFoam.Execution.BasicRunner import BasicRunner
 GEOMETRY_STL = "Wing.stl"
 
 def main():
-    processors_per_job = 50
+    processors_per_job = 64
     num_iterations = 1000
     
     # Parameters
-    cg = 0.05          # Center of gravity x-coordinate
+    cg = 0.25          # Center of gravity x-coordinate
     u = 20.0           # Freestream velocity (MagUInf)
     c = 0.23           # Reference chord (lRef)
-    S = 0.171          # Reference area (Aref)
+    S = 0.100          # Reference area (Aref)
     
-    alphas = [0.0, 3.0, 6.0]
+    alphas = list(range(3, 15, 1))
     initialize_results_csv()
 
     for alpha in alphas:
